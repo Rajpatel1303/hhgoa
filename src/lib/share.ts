@@ -41,8 +41,10 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
 
     const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\n${details.name || 'Builder'} — ${details.builderTitle || 'Shipper'}\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
 
-    // Step 1: Check Web Share Support (especially for mobile)
+    // Step 1: Check Web Share Support on mobile browsers
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (
+      isMobile &&
       navigator.share &&
       navigator.canShare &&
       navigator.canShare({ files: [file] })
