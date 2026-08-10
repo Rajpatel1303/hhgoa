@@ -2,16 +2,34 @@ import { BuilderDetails } from '../types';
 import { renderBuilderCard } from './cardRenderer';
 
 /**
- * Creates X Intent share URL with pre-filled tweet text (text-only)
+ * Creates X Intent share URL with pre-filled tweet text & dynamic page URL for crawler OG rendering
  */
-export function getTwitterShareUrl(details: BuilderDetails): string {
+export function getTwitterShareUrl(details: BuilderDetails, customPhotoUrl?: string): string {
   const name = details.name || 'Builder';
+  const role = details.role || 'Developer';
   const title = details.builderTitle || 'Shipper';
-  
-  const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\n${name} — ${title}\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
+  const stack = details.stack || '';
+  const theme = details.themeId || 'forest-emerald';
+  const cardNo = details.cardNumber || '';
+
+  const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
+
+  const host = typeof window !== 'undefined' ? window.location.origin : 'https://hhgoa-tau.vercel.app';
+  const queryParams = new URLSearchParams({
+    name,
+    role,
+    title,
+    stack,
+    theme,
+    cardNo,
+    photo: customPhotoUrl || '',
+  });
+
+  const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
 
   const params = new URLSearchParams({
-    text: shareText
+    text: shareText,
+    url: shareUrl
   });
 
   return `https://x.com/intent/post?${params.toString()}`;
@@ -20,28 +38,67 @@ export function getTwitterShareUrl(details: BuilderDetails): string {
 /**
  * Opens X (Twitter) in new window with pre-filled post text fallback
  */
-export function shareOnX(details: BuilderDetails): void {
-  const url = getTwitterShareUrl(details);
+export function shareOnX(details: BuilderDetails, customPhotoUrl?: string): void {
+  const url = getTwitterShareUrl(details, customPhotoUrl);
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 /**
  * Handles complete client-side share flow:
- * 1. Tries Web Share API with attached PNG image file (mobile/supported browsers)
- * 2. Fallbacks to opening X post intent with text caption
+ * 1. Uploads local blob photo to CDN storage if needed to obtain public HTTP URL
+ * 2. Tries Web Share API with attached PNG image file (mobile/supported browsers)
+ * 3. Fallbacks to opening X post intent with text caption + dynamic OG url (desktop)
  */
 export async function handleFullShareFlow(details: BuilderDetails): Promise<{
   nativeShared: boolean;
   twitterOpened: boolean;
 }> {
   try {
+    // Step 1: Upload photo to CDN if it is local blob
+    let publicPhotoUrl = '';
+    if (details.photoUrl && details.photoUrl.startsWith('blob:')) {
+      try {
+        const photoResponse = await fetch(details.photoUrl);
+        const photoBlob = await photoResponse.blob();
+        
+        const formData = new FormData();
+        formData.append('file', photoBlob, 'avatar.png');
+        
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.url) {
+          publicPhotoUrl = uploadData.url;
+        }
+      } catch (err) {
+        console.error('Failed to upload avatar to CDN:', err);
+      }
+    } else if (details.photoUrl) {
+      publicPhotoUrl = details.photoUrl; // already public
+    }
+
     const { blob } = await renderBuilderCard(details);
     const fileName = 'HH-Goa-2026-Builder-Pass.png';
     const file = new File([blob], fileName, { type: 'image/png' });
 
-    const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\n${details.name || 'Builder'} — ${details.builderTitle || 'Shipper'}\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
+    const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
 
-    // Step 1: Check Web Share Support on mobile browsers
+    // Construct sharing URL
+    const host = window.location.origin;
+    const queryParams = new URLSearchParams({
+      name: details.name || 'Builder',
+      role: details.role || 'Developer',
+      title: details.builderTitle || 'Shipper',
+      stack: details.stack || '',
+      theme: details.themeId || 'forest-emerald',
+      cardNo: details.cardNumber || '',
+      photo: publicPhotoUrl,
+    });
+    const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
+
+    // Step 2: Check Web Share Support on mobile browsers
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (
       isMobile &&
@@ -51,13 +108,13 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
     ) {
       await navigator.share({
         files: [file],
-        text: shareText
+        text: `${shareText}\n\n${shareUrl}`
       });
       return { nativeShared: true, twitterOpened: false };
     }
 
-    // Step 2: Fallback to opening X tweet intent on desktop / unsupported browsers
-    const tweetUrl = getTwitterShareUrl(details);
+    // Step 3: Fallback to opening X tweet intent on desktop / unsupported browsers
+    const tweetUrl = getTwitterShareUrl(details, publicPhotoUrl);
     window.open(tweetUrl, '_blank', 'noopener,noreferrer');
 
     return { nativeShared: false, twitterOpened: true };
