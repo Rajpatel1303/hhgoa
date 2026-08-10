@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-syne {
+    font-family: 'Syne', sans-serif;
+  }
+  .font-serif {
+    font-family: 'Bodoni Moda', 'Playfair Display', serif;
+  }
+  .font-space {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .font-sans {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+/* Custom tropical emerald background grid pattern */
+.bg-emerald-grid {
+  background-color: #022317;
+  background-image: radial-gradient(rgba(52, 211, 153, 0.12) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
+}
+
+.bg-emerald-card {
+  background-color: #032b1d;
+  border-color: rgba(52, 211, 153, 0.18);
+}
+
+.bg-tech-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(250, 204, 21, 0.15) 1.2px, transparent 1.2px);
+  background-size: 16px 16px;
+}
+
+/* Hide scrollbar for clean horizontal card preview on small screens */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+

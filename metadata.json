@@ -1,0 +1,6 @@
+{
+  "name": "HH Goa 2026 — Builder ID Card Generator",
+  "description": "Mobile-first Builder ID Card Generator for Hacker House Goa 2026 (#FrameInGoa). Generate high-res 4:5 builder pass, download PNG, and share on X.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
