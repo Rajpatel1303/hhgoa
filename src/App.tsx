@@ -4,8 +4,7 @@ import { CardPreview } from './components/CardPreview';
 import { BuilderDetails, BuilderRole, PhotoTransform, CARD_THEMES } from './types';
 import { generateTagline, generateCardNumber } from './lib/builderTitles';
 import { processUploadedFile } from './lib/imageProcessing';
-import { exportCardAsPng, shareOnX, handleFullShareFlow, copyImageToClipboard } from './lib/share';
-import { parseBuilderPassFromUrl } from './lib/qrCode';
+import { exportCardAsPng, shareOnX, handleFullShareFlow } from './lib/share';
 import { 
   Upload, RefreshCw, User, Code, Briefcase, 
   Palette, Download, Share2, Check, AlertCircle, Sliders, Sparkles,
@@ -28,9 +27,7 @@ const ROLES: BuilderRole[] = [
 ];
 
 export default function App() {
-  // Scanned QR code view state
-  const [scannedPass, setScannedPass] = useState<BuilderDetails | null>(null);
-  const [isScannedView, setIsScannedView] = useState<boolean>(false);
+
 
   // User generator state
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -82,12 +79,6 @@ export default function App() {
 
   useEffect(() => {
     setCardNumber(generateCardNumber());
-
-    const parsed = parseBuilderPassFromUrl();
-    if (parsed) {
-      setScannedPass(parsed);
-      setIsScannedView(true);
-    }
   }, []);
 
   const builderTitle = generateTagline(role, stack, titleVariant);
@@ -116,13 +107,7 @@ export default function App() {
       : undefined
   };
 
-  const handleCreateOwnCard = () => {
-    setIsScannedView(false);
-    setScannedPass(null);
-    if (typeof window !== 'undefined') {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  };
+
 
   const handleFileChange = async (file: File) => {
     if (!file) return;
@@ -165,15 +150,12 @@ export default function App() {
       if (res.nativeShared) {
         setShareNotice({
           title: 'Pass Shared Successfully! 🌴',
-          message: 'Your Builder Pass graphic and hashtag #FrameInGoa were sent via your device share sheet.',
+          message: 'Your Builder Pass and caption were shared via your device share sheet.',
         });
       } else if (res.twitterOpened) {
         setShareNotice({
-          title: 'Opening Twitter with #FrameInGoa! 🐦',
-          message: res.clipboardCopied
-            ? 'Your Builder Pass graphic was automatically copied to your clipboard! Simply press Ctrl+V (or Cmd+V) in the Twitter post window to attach it.'
-            : 'Post opened on Twitter with pre-filled caption & hashtag #FrameInGoa. Download the pass below to attach it to your tweet!',
-          clipboardSuccess: res.clipboardCopied,
+          title: 'Opening X with #FrameInGoa! 🐦',
+          message: 'X was opened with your pre-filled caption. Please download the PNG below and upload it to attach it to your post!',
         });
       }
     } catch (err) {
@@ -185,11 +167,6 @@ export default function App() {
   };
 
   const handleReset = () => {
-    setIsScannedView(false);
-    setScannedPass(null);
-    if (typeof window !== 'undefined') {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
     setPhotoUrl(null);
     setTransform({ zoom: 1, panX: 0, panY: 0, rotation: 0, filter: 'none' });
     setName('Harsh Raikwar');
@@ -207,74 +184,7 @@ export default function App() {
       <Navbar onReset={handleReset} />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-8">
-        {/* SCANNED PASS VIEW (When user scans a QR Code) */}
-        {isScannedView && scannedPass ? (
-          <div className="space-y-8 animate-in fade-in duration-300 max-w-4xl mx-auto">
-            {/* Verified Pass Banner */}
-            <div className="bg-gradient-to-r from-[#0d1f17] via-[#081811] to-[#040f0a] border border-emerald-700/80 rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl relative overflow-hidden">
-              <div className="absolute -right-12 -top-12 w-48 h-48 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-900/80 pb-4">
-                <div className="flex items-center gap-2">
-                  <span className="bg-[#facc15] text-black font-mono font-black text-xs px-3 py-1 rounded-full uppercase tracking-wider">
-                    Verified Builder Pass
-                  </span>
-                  <span className="font-mono text-xs text-emerald-400">
-                    ID: {scannedPass.cardNumber}
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleCreateOwnCard}
-                  className="text-xs font-mono text-yellow-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
-                >
-                  <span>Create Your Own Pass</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="space-y-1">
-                <h1 className="font-space font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
-                  {scannedPass.name}'s Builder Passport 🌴
-                </h1>
-                <p className="font-mono text-sm text-pink-400 font-semibold">
-                  » {scannedPass.role} • {scannedPass.builderTitle}
-                </p>
-              </div>
-            </div>
-
-            {/* Card Preview showing all scanned builder info & photo */}
-            <div className="p-3 sm:p-6 bg-[#080d0b] rounded-3xl border border-emerald-900/80 shadow-2xl flex items-center justify-center">
-              <CardPreview details={scannedPass} />
-            </div>
-
-            {/* Scanned View Call-To-Action Box */}
-            <div className="bg-[#0e1512] border border-emerald-800/80 rounded-3xl p-6 sm:p-8 space-y-6 text-center shadow-xl">
-              <div className="space-y-2 max-w-xl mx-auto">
-                <h2 className="font-space font-extrabold text-xl sm:text-2xl text-white">
-                  Want your own Hacker House Goa Pass?
-                </h2>
-                <p className="font-sans text-sm text-emerald-300/80 leading-relaxed">
-                  Design your personalized builder card with your photo, tech stack, and shareable builder pass.
-                </p>
-              </div>
-
-              {/* Big Prominent "Create Your Own Card" CTA Button */}
-              <div className="flex items-center justify-center max-w-md mx-auto pt-2">
-                <button
-                  onClick={handleCreateOwnCard}
-                  className="w-full py-4 px-8 bg-gradient-to-r from-[#facc15] via-amber-400 to-yellow-500 hover:from-yellow-300 hover:to-amber-300 text-black font-space font-black text-sm uppercase rounded-2xl shadow-xl shadow-yellow-500/20 flex items-center justify-center gap-2.5 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Sparkles className="w-5 h-5 text-black" />
-                  <span>Create Your Own Card</span>
-                  <ArrowRight className="w-5 h-5 text-black" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* REGULAR STUDIO GENERATOR VIEW */
-          <>
             {/* Simple Human Title Intro */}
             <div className="space-y-2 border-b border-emerald-900/60 pb-6">
               <h1 className="font-space font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
@@ -749,8 +659,7 @@ export default function App() {
           </div>
 
         </div>
-          </>
-        )}
+
       </main>
 
       {/* Share Notification Modal */}
