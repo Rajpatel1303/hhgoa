@@ -44,8 +44,22 @@ export function shareOnX(details: BuilderDetails, customPhotoUrl?: string): void
 }
 
 /**
+ * Helper to convert Base64 Data URL to standard binary Blob
+ */
+function dataURItoBlob(dataURI: string): Blob {
+  const byteString = atob(dataURI.split(',')[1]);
+  const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+}
+
+/**
  * Handles complete client-side share flow:
- * 1. Uploads local blob photo to CDN storage if needed to obtain public HTTP URL
+ * 1. Uploads local blob or base64 photo to CDN storage if needed to obtain public HTTP URL
  * 2. Tries Web Share API with attached PNG image file (mobile/supported browsers)
  * 3. Fallbacks to opening X post intent with text caption + dynamic OG url (desktop)
  */
@@ -54,12 +68,17 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
   twitterOpened: boolean;
 }> {
   try {
-    // Step 1: Upload photo to CDN if it is local blob
+    // Step 1: Upload photo to CDN if it is local blob or base64 data URL
     let publicPhotoUrl = '';
-    if (details.photoUrl && details.photoUrl.startsWith('blob:')) {
+    if (details.photoUrl && (details.photoUrl.startsWith('blob:') || details.photoUrl.startsWith('data:'))) {
       try {
-        const photoResponse = await fetch(details.photoUrl);
-        const photoBlob = await photoResponse.blob();
+        let photoBlob: Blob;
+        if (details.photoUrl.startsWith('data:')) {
+          photoBlob = dataURItoBlob(details.photoUrl);
+        } else {
+          const photoResponse = await fetch(details.photoUrl);
+          photoBlob = await photoResponse.blob();
+        }
         
         const formData = new FormData();
         formData.append('file', photoBlob, 'avatar.png');
