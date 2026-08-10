@@ -203,14 +203,14 @@ export async function renderBuilderCard(details: BuilderDetails): Promise<{
       ];
       const teamSize = teamPhotos.length;
       const size = 160;
-      const startX = 860;
+      const startX = 820; // Shifted left to make room for wider spacing
       const startY = 380;
 
       for (let idx = 0; idx < teamSize; idx++) {
-        const offset = idx * 85;
+        const offset = idx * 115; // Increased offset from 85 to 115 to spread the polaroids out
         const angle = idx === 0 ? -6 : idx === 1 ? 4 : -2;
         const cx = startX + offset;
-        const cy = startY + (idx === 2 ? 25 : offset * 0.1);
+        const cy = startY + (idx === 2 ? 25 : offset * 0.15);
         await drawStampPhoto(teamPhotos[idx].url, teamPhotos[idx].transform, `P${idx + 1}`, cx, cy, size, angle);
       }
     }

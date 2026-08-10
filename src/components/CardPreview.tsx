@@ -64,8 +64,8 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ details }) => {
       filter: getFilterStyle(transformData?.filter),
     });
 
-    const renderStampPhoto = (url: string, transformData: any, placeholder: string, sizeClass: string) => (
-      <div className={`relative ${sizeClass} p-1 bg-white border-2 border-dashed border-stone-300 shadow-md rotate-[2deg] flex items-center justify-center overflow-hidden shrink-0`}>
+    const renderStampPhoto = (url: string, transformData: any, placeholder: string, sizeClass: string, rotationClass: string = 'rotate-[2deg]') => (
+      <div className={`relative ${sizeClass} p-0.5 @xs:p-1 bg-white border @xs:border-2 border-dashed border-stone-300 shadow-md ${rotationClass} flex items-center justify-center overflow-hidden shrink-0`}>
         <div className="w-full h-full bg-stone-100 flex items-center justify-center relative overflow-hidden">
           {url ? (
             <img
@@ -163,15 +163,18 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ details }) => {
             {/* Right part: Passenger stamps (fixed sizing and overflow bounds) */}
             <div className="shrink-0 flex items-center justify-end max-w-[42%] pl-1">
               {!isTeam ? (
-                renderStampPhoto(details.photoUrl, details.photoTransform, '[ PHOTO ]', 'w-18 h-18 @xs:w-24 @xs:h-24 @sm:w-30 @sm:h-30')
+                renderStampPhoto(details.photoUrl, details.photoTransform, '[ PHOTO ]', 'w-18 h-18 @xs:w-24 @xs:h-24 @sm:w-30 @sm:h-30', 'rotate-[2deg]')
               ) : (
-                <div className="flex items-center -space-x-3 @xs:-space-x-4.5 @sm:-space-x-6">
-                  {renderStampPhoto(details.photoUrl, details.photoTransform, 'P1', 'w-10 h-10 @xs:w-13 @xs:h-13 @sm:w-17 @sm:h-17')}
-                  {details.teammates!.map((t, idx) => (
-                    <React.Fragment key={idx}>
-                      {renderStampPhoto(t.photoUrl, t.photoTransform, `P${idx + 2}`, 'w-10 h-10 @xs:w-13 @xs:h-13 @sm:w-17 @sm:h-17')}
-                    </React.Fragment>
-                  ))}
+                <div className="flex items-center -space-x-1.5 @xs:-space-x-2.5 @sm:-space-x-3.5">
+                  {renderStampPhoto(details.photoUrl, details.photoTransform, 'P1', 'w-10 h-10 @xs:w-13 @xs:h-13 @sm:w-17 @sm:h-17', 'rotate-[-6deg] translate-y-0.5 z-10')}
+                  {details.teammates!.map((t, idx) => {
+                    const rotation = idx === 0 ? 'rotate-[4deg] -translate-y-0.5 z-20' : 'rotate-[-2deg] translate-y-1 z-30';
+                    return (
+                      <React.Fragment key={idx}>
+                        {renderStampPhoto(t.photoUrl, t.photoTransform, `P${idx + 2}`, 'w-10 h-10 @xs:w-13 @xs:h-13 @sm:w-17 @sm:h-17', rotation)}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               )}
             </div>
