@@ -14,6 +14,8 @@ interface PageProps {
     stack?: string;
     theme?: string;
     cardNo?: string;
+    passType?: string;
+    teammates?: string;
   }>;
 }
 
@@ -28,6 +30,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const theme = params.theme || 'vintage-goa';
 
   const host = process.env.NEXT_PUBLIC_SITE_URL || 'https://hhgoa-tau.vercel.app';
+  const passType = params.passType || 'single';
+  const teammates = params.teammates || '';
   
   // Build query params specifically for /api/og
   const ogParams = new URLSearchParams({
@@ -37,6 +41,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     stack,
     photo,
     theme,
+    passType,
+    teammates,
   });
   
   const absoluteOgImageUrl = `${host}/api/og?${ogParams.toString()}`;
@@ -76,6 +82,16 @@ export default async function Page({ searchParams }: PageProps) {
   const theme = params.theme || 'vintage-goa';
   const cardNo = params.cardNo || 'HH26-3E3BA58';
 
+  const passType = params.passType || 'single';
+  let teammates: any[] = [];
+  if (passType === 'team' && params.teammates) {
+    try {
+      teammates = JSON.parse(params.teammates);
+    } catch (err) {
+      console.error('Failed to parse teammates query param on pass page:', err);
+    }
+  }
+
   const builderDetails: BuilderDetails = {
     id: cardNo,
     name,
@@ -87,7 +103,8 @@ export default async function Page({ searchParams }: PageProps) {
     cardNumber: cardNo,
     photoTransform: { zoom: 1, panX: 0, panY: 0, rotation: 0, filter: 'none' },
     createdAt: new Date().toISOString(),
-    passType: 'single',
+    passType: passType as 'single' | 'team',
+    teammates: teammates,
   };
 
   return (

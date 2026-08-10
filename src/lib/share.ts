@@ -23,7 +23,12 @@ export function getTwitterShareUrl(details: BuilderDetails, customPhotoUrl?: str
     theme,
     cardNo,
     photo: customPhotoUrl || '',
+    passType: details.passType || 'single',
   });
+
+  if (details.passType === 'team' && details.teammates) {
+    queryParams.append('teammates', JSON.stringify(details.teammates));
+  }
 
   const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
 
@@ -114,7 +119,13 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
       theme: details.themeId || 'forest-emerald',
       cardNo: details.cardNumber || '',
       photo: publicPhotoUrl,
+      passType: details.passType || 'single',
     });
+
+    if (details.passType === 'team' && details.teammates) {
+      queryParams.append('teammates', JSON.stringify(details.teammates));
+    }
+
     const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
 
     // Step 2: Check Web Share Support on mobile browsers

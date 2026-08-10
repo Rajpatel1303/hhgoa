@@ -13,6 +13,16 @@ export async function GET(req: NextRequest) {
     const stack = searchParams.get('stack') || 'Nextjs, Nodejs, Django, React, AI';
     const photo = searchParams.get('photo');
     const theme = searchParams.get('theme') || 'forest-emerald';
+    const passType = searchParams.get('passType') || 'single';
+    const teammatesParam = searchParams.get('teammates');
+    let teammates: any[] = [];
+    if (passType === 'team' && teammatesParam) {
+      try {
+        teammates = JSON.parse(teammatesParam);
+      } catch (err) {
+        console.error('Failed to parse teammates query param in OG route:', err);
+      }
+    }
 
     if (theme === 'goa-boarding-pass' || theme === 'vintage-goa') {
       const isDark = theme === 'vintage-goa';
@@ -24,16 +34,25 @@ export async function GET(req: NextRequest) {
         .filter((s) => s.length > 0)
         .slice(0, 5);
 
-      const ogName = name.toUpperCase();
+      const isTeam = passType === 'team' && teammates.length > 0;
+      
+      const ogName = isTeam
+        ? [name.toUpperCase(), ...teammates.map((t: any) => (t.name || 'TEAMMATE').toUpperCase())].join(' & ')
+        : name.toUpperCase();
+
+      const ogRoleText = isTeam
+        ? Array.from(new Set([role.toUpperCase(), ...teammates.map((t: any) => (t.role || 'Builder').toUpperCase())])).join(' • ')
+        : role.toUpperCase();
+
       const ogNameFontSize = ogName.length > 35
-        ? '16px'
-        : ogName.length > 20
-        ? '20px'
-        : '24px';
-      const ogStubNameFontSize = ogName.length > 35
         ? '12px'
         : ogName.length > 20
-        ? '15px'
+        ? '16px'
+        : '24px';
+      const ogStubNameFontSize = ogName.length > 35
+        ? '9px'
+        : ogName.length > 20
+        ? '12px'
         : '18px';
 
       const cardBg = isDark ? '#052A1A' : '#FAF8F5';
@@ -169,7 +188,7 @@ export async function GET(req: NextRequest) {
                         fontFamily: 'monospace',
                       }}
                     >
-                      {role.toUpperCase()}
+                      {ogRoleText}
                     </span>
                   </div>
                   <div
@@ -207,39 +226,124 @@ export async function GET(req: NextRequest) {
                 </div>
 
                 {/* Photo Stamp */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '180px',
-                    height: '180px',
-                    backgroundColor: '#FFFFFF',
-                    border: '2px dashed #D6D3D1',
-                    padding: '6px',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
-                    transform: 'rotate(2deg)',
-                  }}
-                >
-                  <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
-                    {photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={photo}
-                        alt="avatar"
+                {!isTeam ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '180px',
+                      height: '180px',
+                      backgroundColor: '#FFFFFF',
+                      border: '2px dashed #D6D3D1',
+                      padding: '6px',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                      transform: 'rotate(2deg)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt="avatar"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <div style={{ color: '#A8A29E', fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>
+                          [ PHOTO ]
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', position: 'relative', width: '220px', height: '180px' }}>
+                    {/* Photo 1 (left) */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        position: 'absolute',
+                        left: '0px',
+                        top: '25px',
+                        width: '100px',
+                        height: '100px',
+                        backgroundColor: '#FFFFFF',
+                        border: '1.5px dashed #D6D3D1',
+                        padding: '3px',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                        transform: 'rotate(-6deg)',
+                        zIndex: 10,
+                      }}
+                    >
+                      <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
+                        {photo ? (
+                          <img src={photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P1</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Photo 2 (middle) */}
+                    {teammates.length > 0 && (
+                      <div
                         style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
+                          display: 'flex',
+                          position: 'absolute',
+                          left: '60px',
+                          top: '15px',
+                          width: '100px',
+                          height: '100px',
+                          backgroundColor: '#FFFFFF',
+                          border: '1.5px dashed #D6D3D1',
+                          padding: '3px',
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                          transform: 'rotate(4deg)',
+                          zIndex: 20,
                         }}
-                      />
-                    ) : (
-                      <div style={{ color: '#A8A29E', fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>
-                        [ PHOTO ]
+                      >
+                        <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
+                          {teammates[0].photoUrl ? (
+                            <img src={teammates[0].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P2</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Photo 3 (right) */}
+                    {teammates.length > 1 && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          position: 'absolute',
+                          left: '120px',
+                          top: '30px',
+                          width: '100px',
+                          height: '100px',
+                          backgroundColor: '#FFFFFF',
+                          border: '1.5px dashed #D6D3D1',
+                          padding: '3px',
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                          transform: 'rotate(-2deg)',
+                          zIndex: 30,
+                        }}
+                      >
+                        <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
+                          {teammates[1].photoUrl ? (
+                            <img src={teammates[1].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P3</div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Grid Footer */}
