@@ -76,6 +76,53 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
   nativeShared: boolean;
   twitterOpened: boolean;
 }> {
+  // Bypassing browser popup blocker by opening the target window synchronously on user click
+  let newTab: Window | null = null;
+  const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  if (!isMobile) {
+    newTab = window.open('', '_blank');
+    if (newTab) {
+      newTab.document.write(`
+        <html>
+          <head>
+            <title>Opening X...</title>
+            <style>
+              body {
+                background: #070d0a;
+                color: #f2efe9;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+              }
+              .loader {
+                border: 3px solid #1c2d24;
+                border-top: 3px solid #facc15;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                animation: spin 1s linear infinite;
+                margin-bottom: 16px;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="loader"></div>
+            <div style="font-weight: 600; font-size: 16px;">Preparing your Builder Pass for X...</div>
+          </body>
+        </html>
+      `);
+    }
+  }
+
   try {
     // Step 1: Upload photo to CDN if it is local blob or base64 data URL
     let publicPhotoUrl = '';
@@ -182,7 +229,6 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
     const shareTextMobile = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${detailsForShare.cardNumber || ''}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
 
     // Step 2: Check Web Share Support on mobile browsers
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (
       isMobile &&
       navigator.share &&
@@ -198,11 +244,21 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
 
     // Step 3: Fallback to opening X tweet intent on desktop / unsupported browsers
     const tweetUrl = getTwitterShareUrl(detailsForShare, detailsForShare.photoUrl || undefined);
-    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+    
+    if (newTab) {
+      newTab.location.href = tweetUrl;
+    } else {
+      window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+    }
 
     return { nativeShared: false, twitterOpened: true };
   } catch (err) {
     console.error('Share flow error:', err);
+    if (newTab) {
+      try {
+        newTab.close();
+      } catch (e) {}
+    }
     // Fallback simple window open on error
     shareOnX(details);
     return { nativeShared: false, twitterOpened: true };
