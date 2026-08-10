@@ -12,8 +12,6 @@ export function getTwitterShareUrl(details: BuilderDetails, customPhotoUrl?: str
   const theme = details.themeId || 'forest-emerald';
   const cardNo = details.cardNumber || '';
 
-  const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
-
   const host = typeof window !== 'undefined' ? window.location.origin : 'https://hhgoa-tau.vercel.app';
   const queryParams = new URLSearchParams({
     name,
@@ -32,9 +30,15 @@ export function getTwitterShareUrl(details: BuilderDetails, customPhotoUrl?: str
 
   const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
 
+  const isTeam = details.passType === 'team' && details.teammates && details.teammates.length > 0;
+  const displayNames = isTeam
+    ? [name, ...details.teammates!.map((t) => t.name || 'Teammate')].join(' & ')
+    : name;
+
+  const shareText = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${cardNo}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
+
   const params = new URLSearchParams({
-    text: shareText,
-    url: shareUrl
+    text: shareText
   });
 
   return `https://x.com/intent/post?${params.toString()}`;
@@ -107,8 +111,6 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
     const fileName = 'HH-Goa-2026-Builder-Pass.png';
     const file = new File([blob], fileName, { type: 'image/png' });
 
-    const shareText = `Just created my HH Goa 2026 Builder Pass! 🚀\n\nSee you in Goa!\n\n#FrameInGoa #HHGoa2026`;
-
     // Construct sharing URL
     const host = window.location.origin;
     const queryParams = new URLSearchParams({
@@ -128,6 +130,13 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
 
     const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
 
+    const isTeam = details.passType === 'team' && details.teammates && details.teammates.length > 0;
+    const displayNames = isTeam
+      ? [details.name || 'Builder', ...details.teammates!.map((t) => t.name || 'Teammate')].join(' & ')
+      : details.name || 'Builder';
+
+    const shareTextMobile = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${details.cardNumber || ''}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
+
     // Step 2: Check Web Share Support on mobile browsers
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     if (
@@ -138,7 +147,7 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
     ) {
       await navigator.share({
         files: [file],
-        text: `${shareText}\n\n${shareUrl}`
+        text: shareTextMobile
       });
       return { nativeShared: true, twitterOpened: false };
     }
