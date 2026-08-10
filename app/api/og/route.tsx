@@ -3,6 +3,33 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
+/**
+ * Helper to fetch a remote image and convert it to a base64 Data URL inside the Edge Runtime.
+ * This prevents Satori from making dynamic network requests during HTML->SVG generation.
+ */
+async function getBase64Image(url: string): Promise<string> {
+  if (!url) return '';
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return '';
+    const arrayBuffer = await res.arrayBuffer();
+    
+    // Convert ArrayBuffer to Base64 in Edge Runtime
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+    
+    const contentType = res.headers.get('content-type') || 'image/png';
+    return `data:${contentType};base64,${base64}`;
+  } catch (e) {
+    console.error('Failed to fetch image for base64 conversion:', e);
+    return '';
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -24,6 +51,37 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Preload main photo and convert to base64 Data URL to bypass Satori network fetches
+    let mainPhotoBase64 = '';
+    if (photo) {
+      mainPhotoBase64 = await getBase64Image(photo);
+    }
+
+    // Preload teammate photos and convert to base64 Data URLs
+    const teammatesWithBase64 = [];
+    if (teammates && teammates.length > 0) {
+      for (const t of teammates) {
+        let teammateBase64 = '';
+        if (t.photoUrl) {
+          teammateBase64 = await getBase64Image(t.photoUrl);
+        }
+        teammatesWithBase64.push({
+          ...t,
+          photoUrl: teammateBase64 || null
+        });
+      }
+    }
+
+    const isTeam = passType === 'team' && teammates.length > 0;
+    
+    const ogName = isTeam
+      ? [name.toUpperCase(), ...teammates.map((t: any) => (t.name || 'TEAMMATE').toUpperCase())].join(' & ')
+      : name.toUpperCase();
+
+    const ogRoleText = isTeam
+      ? Array.from(new Set([role.toUpperCase(), ...teammates.map((t: any) => (t.role || 'Builder').toUpperCase())])).join(' • ')
+      : role.toUpperCase();
+
     if (theme === 'goa-boarding-pass' || theme === 'vintage-goa') {
       const isDark = theme === 'vintage-goa';
       const barcodes = [2, 1, 3, 1, 4, 2, 1, 3, 2, 1, 2, 4, 1, 2, 3, 1, 2, 1, 3, 2];
@@ -33,16 +91,6 @@ export async function GET(req: NextRequest) {
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
         .slice(0, 5);
-
-      const isTeam = passType === 'team' && teammates.length > 0;
-      
-      const ogName = isTeam
-        ? [name.toUpperCase(), ...teammates.map((t: any) => (t.name || 'TEAMMATE').toUpperCase())].join(' & ')
-        : name.toUpperCase();
-
-      const ogRoleText = isTeam
-        ? Array.from(new Set([role.toUpperCase(), ...teammates.map((t: any) => (t.role || 'Builder').toUpperCase())])).join(' • ')
-        : role.toUpperCase();
 
       const ogNameFontSize = ogName.length > 35
         ? '12px'
@@ -242,9 +290,9 @@ export async function GET(req: NextRequest) {
                     }}
                   >
                     <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
-                      {photo ? (
+                      {mainPhotoBase64 ? (
                         <img
-                          src={photo}
+                          src={mainPhotoBase64}
                           alt="avatar"
                           style={{
                             width: '100%',
@@ -279,8 +327,8 @@ export async function GET(req: NextRequest) {
                       }}
                     >
                       <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
-                        {photo ? (
-                          <img src={photo} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {mainPhotoBase64 ? (
+                          <img src={mainPhotoBase64} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
                           <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P1</div>
                         )}
@@ -288,7 +336,7 @@ export async function GET(req: NextRequest) {
                     </div>
 
                     {/* Photo 2 (middle) */}
-                    {teammates.length > 0 && (
+                    {teammatesWithBase64.length > 0 && (
                       <div
                         style={{
                           display: 'flex',
@@ -306,8 +354,8 @@ export async function GET(req: NextRequest) {
                         }}
                       >
                         <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
-                          {teammates[0].photoUrl ? (
-                            <img src={teammates[0].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {teammatesWithBase64[0].photoUrl ? (
+                            <img src={teammatesWithBase64[0].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P2</div>
                           )}
@@ -316,7 +364,7 @@ export async function GET(req: NextRequest) {
                     )}
 
                     {/* Photo 3 (right) */}
-                    {teammates.length > 1 && (
+                    {teammatesWithBase64.length > 1 && (
                       <div
                         style={{
                           display: 'flex',
@@ -334,8 +382,8 @@ export async function GET(req: NextRequest) {
                         }}
                       >
                         <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
-                          {teammates[1].photoUrl ? (
-                            <img src={teammates[1].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {teammatesWithBase64[1].photoUrl ? (
+                            <img src={teammatesWithBase64[1].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P3</div>
                           )}
@@ -534,10 +582,10 @@ export async function GET(req: NextRequest) {
                   backgroundColor: 'linear-gradient(to bottom right, #FACC15, #EC4899, #059669)',
                 }}
               >
-                {photo ? (
+                {mainPhotoBase64 ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={photo}
+                    src={mainPhotoBase64}
                     alt="avatar"
                     style={{
                       width: '100%',
@@ -641,7 +689,7 @@ export async function GET(req: NextRequest) {
                 textOverflow: 'ellipsis',
               }}
             >
-              {name.toUpperCase()}
+              {ogName}
             </div>
 
             {/* Role title */}
