@@ -96,9 +96,9 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
           method: 'POST',
           body: formData,
         });
-        const uploadData = await uploadRes.json();
-        if (uploadData.url) {
-          publicPhotoUrl = uploadData.url;
+        const uploadResData = await uploadRes.json();
+        if (uploadResData.url) {
+          publicPhotoUrl = uploadResData.url;
         }
       } catch (err) {
         console.error('Failed to upload avatar to CDN:', err);
@@ -107,35 +107,79 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
       publicPhotoUrl = details.photoUrl; // already public
     }
 
-    const { blob } = await renderBuilderCard(details);
+    // Upload teammate photos to CDN if they are local blob or base64 data URLs
+    const uploadedTeammates = [];
+    if (details.teammates && details.teammates.length > 0) {
+      for (const teammate of details.teammates) {
+        let teammatePhotoUrl = teammate.photoUrl || '';
+        if (teammatePhotoUrl && (teammatePhotoUrl.startsWith('blob:') || teammatePhotoUrl.startsWith('data:'))) {
+          try {
+            let photoBlob: Blob;
+            if (teammatePhotoUrl.startsWith('data:')) {
+              photoBlob = dataURItoBlob(teammatePhotoUrl);
+            } else {
+              const photoResponse = await fetch(teammatePhotoUrl);
+              photoBlob = await photoResponse.blob();
+            }
+            
+            const formData = new FormData();
+            formData.append('file', photoBlob, 'avatar.png');
+            
+            const uploadRes = await fetch('/api/upload', {
+              method: 'POST',
+              body: formData,
+            });
+            const uploadResData = await uploadRes.json();
+            if (uploadResData.url) {
+              teammatePhotoUrl = uploadResData.url;
+            }
+          } catch (err) {
+            console.error('Failed to upload teammate avatar to CDN:', err);
+          }
+        }
+        uploadedTeammates.push({
+          ...teammate,
+          photoUrl: teammatePhotoUrl
+        });
+      }
+    }
+
+    // Construct fully populated details for sharing
+    const detailsForShare = {
+      ...details,
+      photoUrl: publicPhotoUrl || details.photoUrl,
+      teammates: uploadedTeammates
+    };
+
+    const { blob } = await renderBuilderCard(detailsForShare);
     const fileName = 'HH-Goa-2026-Builder-Pass.png';
     const file = new File([blob], fileName, { type: 'image/png' });
 
     // Construct sharing URL
     const host = window.location.origin;
     const queryParams = new URLSearchParams({
-      name: details.name || 'Builder',
-      role: details.role || 'Developer',
-      title: details.builderTitle || 'Shipper',
-      stack: details.stack || '',
-      theme: details.themeId || 'forest-emerald',
-      cardNo: details.cardNumber || '',
-      photo: publicPhotoUrl,
-      passType: details.passType || 'single',
+      name: detailsForShare.name || 'Builder',
+      role: detailsForShare.role || 'Developer',
+      title: detailsForShare.builderTitle || 'Shipper',
+      stack: detailsForShare.stack || '',
+      theme: detailsForShare.themeId || 'forest-emerald',
+      cardNo: detailsForShare.cardNumber || '',
+      photo: detailsForShare.photoUrl || '',
+      passType: detailsForShare.passType || 'single',
     });
 
-    if (details.passType === 'team' && details.teammates) {
-      queryParams.append('teammates', JSON.stringify(details.teammates));
+    if (detailsForShare.passType === 'team' && detailsForShare.teammates && detailsForShare.teammates.length > 0) {
+      queryParams.append('teammates', JSON.stringify(detailsForShare.teammates));
     }
 
     const shareUrl = `${host}/pass/builder?${queryParams.toString()}`;
 
-    const isTeam = details.passType === 'team' && details.teammates && details.teammates.length > 0;
+    const isTeam = detailsForShare.passType === 'team' && detailsForShare.teammates && detailsForShare.teammates.length > 0;
     const displayNames = isTeam
-      ? [details.name || 'Builder', ...details.teammates!.map((t) => t.name || 'Teammate')].join(' & ')
-      : details.name || 'Builder';
+      ? [detailsForShare.name || 'Builder', ...detailsForShare.teammates!.map((t) => t.name || 'Teammate')].join(' & ')
+      : detailsForShare.name || 'Builder';
 
-    const shareTextMobile = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${details.cardNumber || ''}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
+    const shareTextMobile = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${detailsForShare.cardNumber || ''}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
 
     // Step 2: Check Web Share Support on mobile browsers
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -153,7 +197,7 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
     }
 
     // Step 3: Fallback to opening X tweet intent on desktop / unsupported browsers
-    const tweetUrl = getTwitterShareUrl(details, publicPhotoUrl);
+    const tweetUrl = getTwitterShareUrl(detailsForShare, detailsForShare.photoUrl || undefined);
     window.open(tweetUrl, '_blank', 'noopener,noreferrer');
 
     return { nativeShared: false, twitterOpened: true };
