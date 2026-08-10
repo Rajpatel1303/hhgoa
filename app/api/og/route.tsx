@@ -14,6 +14,327 @@ export async function GET(req: NextRequest) {
     const photo = searchParams.get('photo');
     const theme = searchParams.get('theme') || 'forest-emerald';
 
+    if (theme === 'goa-boarding-pass' || theme === 'vintage-goa') {
+      const isDark = theme === 'vintage-goa';
+      const barcodes = [2, 1, 3, 1, 4, 2, 1, 3, 2, 1, 2, 4, 1, 2, 3, 1, 2, 1, 3, 2];
+
+      const stackChips = stack
+        .split(/[,/·•\n]+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+        .slice(0, 5);
+
+      const ogName = name.toUpperCase();
+      const ogNameFontSize = ogName.length > 35
+        ? '16px'
+        : ogName.length > 20
+        ? '20px'
+        : '24px';
+      const ogStubNameFontSize = ogName.length > 35
+        ? '12px'
+        : ogName.length > 20
+        ? '15px'
+        : '18px';
+
+      const cardBg = isDark ? '#052A1A' : '#FAF8F5';
+      const cardBorder = isDark ? '8px solid rgba(52, 211, 153, 0.25)' : '8px solid #E5E7EB';
+      const textColor = isDark ? '#FFFFFF' : '#1C1917';
+      const labelColor = isDark ? '#A7F3D0' : '#A8A29E';
+      const valueColor = isDark ? '#FFFFFF' : '#1C1917';
+      const dividerBorder = isDark ? '2px solid rgba(52, 211, 153, 0.2)' : '2px solid #E7E5E4';
+      const perforatedBorder = isDark ? '4px dashed rgba(52, 211, 153, 0.25)' : '4px dashed #D6D3D1';
+      const headerColor = isDark ? '#FACC15' : '#047857';
+      const airportCodeColor = isDark ? '#FFFFFF' : '#047857';
+      const arrowColor = isDark ? '#FACC15' : '#F97316';
+      const rolePillBg = isDark ? 'rgba(4, 120, 87, 0.2)' : 'rgba(4, 120, 87, 0.1)';
+      const rolePillBorder = isDark ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(4, 120, 87, 0.25)';
+      const rolePillTextColor = isDark ? '#34D399' : '#047857';
+      const stubBg = isDark ? '#02160e' : '#F5F5F4';
+      const stubLeftBorder = isDark ? '2px solid rgba(52, 211, 153, 0.25)' : '2px solid #E7E5E4';
+      const barcodeColor = isDark ? '#34D399' : '#1C1917';
+      const cardNumberColor = isDark ? '#34D399' : '#78716C';
+
+      return new ImageResponse(
+        (
+          <div
+            style={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: cardBg,
+              border: cardBorder,
+              padding: '40px 50px',
+              boxSizing: 'border-box',
+              position: 'relative',
+            }}
+          >
+            {/* Notch Cutout Elements (Mocked with page background color #070d0a) */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: '72%',
+                width: '30px',
+                height: '15px',
+                backgroundColor: '#070d0a',
+                borderBottomLeftRadius: '15px',
+                borderBottomRightRadius: '15px',
+                transform: 'translateX(-15px)',
+                zIndex: 20,
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: '72%',
+                width: '30px',
+                height: '15px',
+                backgroundColor: '#070d0a',
+                borderTopLeftRadius: '15px',
+                borderTopRightRadius: '15px',
+                transform: 'translateX(-15px)',
+                zIndex: 20,
+              }}
+            />
+
+            {/* Perforated divider */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '25px',
+                bottom: '25px',
+                left: '72%',
+                width: '0px',
+                borderLeft: perforatedBorder,
+                transform: 'translateX(-2px)',
+                zIndex: 10,
+              }}
+            />
+
+            {/* MAIN PASS (72%) */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '72%',
+                height: '100%',
+                justifyContent: 'space-between',
+                paddingRight: '40px',
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  borderBottom: dividerBorder,
+                  paddingBottom: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', color: headerColor, fontSize: '18px', fontWeight: 900 }}>
+                  ✈️ HACKER HOUSE AIRLINES
+                </div>
+                <div style={{ color: labelColor, fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  BOARDING PASS
+                </div>
+              </div>
+
+              {/* Middle Section */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, margin: '15px 0' }}>
+                {/* Details */}
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', color: airportCodeColor, fontSize: '48px', fontWeight: 900 }}>
+                    HCK <span style={{ color: arrowColor, fontSize: '28px', margin: '0 15px' }}>➔</span> GOA
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
+                    <span style={{ fontSize: '10px', color: labelColor, fontFamily: 'monospace', textTransform: 'uppercase' }}>Passenger</span>
+                    <span style={{ fontSize: ogNameFontSize, fontWeight: 900, color: textColor, lineHeight: 1.2 }}>{ogName}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', marginTop: '8px' }}>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        color: rolePillTextColor,
+                        backgroundColor: rolePillBg,
+                        border: rolePillBorder,
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {role.toUpperCase()}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontStyle: 'italic',
+                      color: isDark ? '#FEF08A' : '#78716C',
+                      marginTop: '8px',
+                      display: 'flex',
+                    }}
+                  >
+                    {title}
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '8px', maxWidth: '280px' }}>
+                    {stackChips.map((chip, idx) => (
+                      <span
+                        key={idx}
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          fontFamily: 'monospace',
+                          color: isDark ? '#A7F3D0' : '#57534E',
+                          backgroundColor: isDark ? 'rgba(4, 120, 87, 0.2)' : '#F5F5F4',
+                          border: isDark ? '1px solid rgba(52, 211, 153, 0.25)' : '1px solid #E7E5E4',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          marginRight: '6px',
+                          marginBottom: '4px',
+                        }}
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Photo Stamp */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '180px',
+                    height: '180px',
+                    backgroundColor: '#FFFFFF',
+                    border: '2px dashed #D6D3D1',
+                    padding: '6px',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.05)',
+                    transform: 'rotate(2deg)',
+                  }}
+                >
+                  <div style={{ display: 'flex', width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#F5F5F4' }}>
+                    {photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photo}
+                        alt="avatar"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
+                      <div style={{ color: '#A8A29E', fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>
+                        [ PHOTO ]
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Grid Footer */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  borderTop: dividerBorder,
+                  paddingTop: '10px',
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                  color: labelColor,
+                }}
+              >
+                <div>FLIGHT: <span style={{ color: valueColor, fontWeight: 'bold' }}>HH2026</span></div>
+                <div>SEAT: <span style={{ color: valueColor, fontWeight: 'bold' }}>24A</span></div>
+                <div>GATE: <span style={{ color: '#F97316', fontWeight: 'bold' }}>08</span></div>
+                <div>DATE: <span style={{ color: valueColor, fontWeight: 'bold' }}>28 OCT 2026</span></div>
+              </div>
+
+            </div>
+
+            {/* STUB (28%) */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '28%',
+                height: '100%',
+                justifyContent: 'space-between',
+                paddingLeft: '30px',
+                boxSizing: 'border-box',
+                backgroundColor: stubBg,
+                borderLeft: stubLeftBorder,
+              }}
+            >
+              {/* Header */}
+              <div style={{ borderBottom: dividerBorder, paddingBottom: '10px', textAlign: 'right' }}>
+                <span style={{ color: labelColor, fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                  FLIGHT STUB
+                </span>
+              </div>
+
+              {/* Stub info */}
+              <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyItems: 'center', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '9px', color: labelColor, fontFamily: 'monospace' }}>PASSENGER</span>
+                  <span style={{ fontSize: ogStubNameFontSize, fontWeight: 900, color: textColor, lineHeight: 1.2 }}>{ogName}</span>
+                </div>
+
+                <div style={{ display: 'flex', marginTop: '10px', fontFamily: 'monospace', fontSize: '10px', color: labelColor }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '50%' }}>
+                    <span>SEAT</span>
+                    <span style={{ color: valueColor, fontWeight: 'bold', fontSize: '14px' }}>24A</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '50%' }}>
+                    <span>CLASS</span>
+                    <span style={{ color: valueColor, fontWeight: 'bold', fontSize: '14px' }}>VIP</span>
+                  </div>
+                </div>
+
+                {/* Barcode lines */}
+                <div style={{ display: 'flex', height: '40px', marginTop: '15px', opacity: 0.8 }}>
+                  {barcodes.map((w, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        width: `${w * 1.5}px`,
+                        height: '100%',
+                        backgroundColor: barcodeColor,
+                        marginRight: '2px',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Stub card number footer */}
+              <div style={{ borderTop: dividerBorder, paddingTop: '10px', textAlign: 'right' }}>
+                <span style={{ color: cardNumberColor, fontSize: '12px', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                  {searchParams.get('cardNo') || 'HH26-BUILDER'}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        ),
+        {
+          width: 1200,
+          height: 630,
+        }
+      );
+    }
+
     // Parse stack chips
     const stackChips = stack
       .split(/[,/·•\n]+/)

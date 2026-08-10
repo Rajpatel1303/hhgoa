@@ -36,10 +36,352 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ details }) => {
   const displayNames = isTeam
     ? [nameText, ...details.teammates!.map((t) => (t.name || 'TEAMMATE').toUpperCase())].join(' & ')
     : nameText;
-
   const displayRoles = isTeam
     ? Array.from(new Set([roleText, ...details.teammates!.map((t) => (t.role || 'Builder').toUpperCase())])).join(' • ')
     : roleText;
+
+  if (theme.id === 'goa-boarding-pass' || theme.id === 'vintage-goa') {
+    const isDark = theme.id === 'vintage-goa';
+    const textColor = isDark ? 'text-white' : 'text-stone-900';
+    const labelColor = isDark ? 'text-emerald-300/80' : 'text-stone-400';
+    const valueColor = isDark ? 'text-white' : 'text-stone-700';
+    const borderColor = isDark ? 'border-emerald-800/40' : 'border-stone-200';
+    const dividingLineColor = isDark ? 'border-emerald-800/30' : 'border-stone-300';
+    const headerColor = isDark ? 'text-[#facc15]' : 'text-[#047857]';
+    const headerBorder = isDark ? 'border-emerald-800/40' : 'border-stone-200';
+    const rolePillClass = isDark
+      ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-850/60'
+      : 'bg-[#047857]/10 text-[#047857] border border-[#047857]/20';
+    const stubBg = isDark ? 'bg-[#02160e]' : 'bg-[#F5F5F4]';
+    const stubBorder = isDark ? 'border-emerald-800/50' : 'border-stone-200';
+
+    const photoTransformStyles = (transformData: any) => ({
+      transform: `scale(${transformData?.zoom || 1}) translate(${
+        transformData?.panX || 0
+      }px, ${transformData?.panY || 0}px) rotate(${
+        transformData?.rotation || 0
+      }deg)`,
+      filter: getFilterStyle(transformData?.filter),
+    });
+
+    const renderStampPhoto = (url: string, transformData: any, placeholder: string, sizeClass: string) => (
+      <div className={`relative ${sizeClass} p-1 bg-white border-2 border-dashed border-stone-300 shadow-md rotate-[2deg] flex items-center justify-center overflow-hidden shrink-0`}>
+        <div className="w-full h-full bg-stone-100 flex items-center justify-center relative overflow-hidden">
+          {url ? (
+            <img
+              src={url}
+              alt="passenger"
+              style={photoTransformStyles(transformData)}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="text-[8px] @xs:text-[10px] font-mono text-stone-400 font-bold">{placeholder}</div>
+          )}
+        </div>
+      </div>
+    );
+
+    return (
+      <div 
+        className={`@container w-full max-w-[620px] mx-auto aspect-[16/9] border shadow-2xl rounded-2xl relative overflow-hidden flex items-stretch font-sans select-none ${textColor} ${borderColor}`}
+        style={{ backgroundColor: theme.cardBg }}
+      >
+        
+        {/* Ticket Notch Cutouts (Mock cutout using background matches page color) */}
+        <div className="absolute top-0 left-[72%] w-6 h-3 bg-[#070d0a] border-b border-l border-r border-stone-200 rounded-b-full transform -translate-x-1/2 z-20" style={{ borderColor: isDark ? 'rgba(52, 211, 153, 0.2)' : '#e5e7eb' }} />
+        <div className="absolute bottom-0 left-[72%] w-6 h-3 bg-[#070d0a] border-t border-l border-r border-stone-200 rounded-t-full transform -translate-x-1/2 z-20" style={{ borderColor: isDark ? 'rgba(52, 211, 153, 0.2)' : '#e5e7eb' }} />
+        
+        {/* Perforated dashed dividing line */}
+        <div className={`absolute top-3 bottom-3 left-[72%] border-l border-dashed transform -translate-x-1/2 z-10 ${dividingLineColor}`} />
+
+        {/* LEFT COLUMN: Main Pass (72% width) */}
+        <div className="w-[72%] flex flex-col justify-between p-3 @xs:p-4 pr-6">
+          
+          {/* Header Row */}
+          <div className={`flex items-center justify-between border-b pb-1.5 ${headerBorder}`}>
+            <div className={`flex items-center gap-1.5 ${headerColor}`}>
+              <span className="text-xs @xs:text-sm">✈️</span>
+              <span className="font-space font-black text-[9px] @xs:text-xs tracking-wider uppercase">
+                Hacker House Airlines
+              </span>
+            </div>
+            <span className={`font-mono text-[8px] @xs:text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-emerald-400/80' : 'text-stone-400'}`}>
+              Boarding Pass
+            </span>
+          </div>
+
+          {/* Core Ticket details: Flight Origin / Dest & Photo Stamp */}
+          <div className="flex-1 flex items-center justify-between my-2 gap-2 min-w-0">
+            {/* Left part: Airport codes & Flight Info */}
+            <div className="flex-1 space-y-1 @xs:space-y-2 min-w-0 pr-2">
+              <div className="flex items-center gap-2 @xs:gap-3 leading-none">
+                <span className={`font-space font-black text-2xl @xs:text-4xl ${isDark ? 'text-white' : 'text-[#047857]'}`}>HCK</span>
+                <span className="text-[#F97316] font-bold text-xs @xs:text-sm">➔</span>
+                <span className={`font-space font-black text-2xl @xs:text-4xl ${isDark ? 'text-white' : 'text-[#047857]'}`}>GOA</span>
+              </div>
+              
+              <div className="space-y-0.5 min-w-0">
+                <div className={`text-[6px] @xs:text-[8px] font-mono uppercase ${labelColor}`}>Passenger</div>
+                <div className={`font-space font-black uppercase leading-none break-words line-clamp-2 max-w-[160px] @xs:max-w-[240px] ${
+                  displayNames.length > 35
+                    ? 'text-[8.5px] @xs:text-[10.5px] @sm:text-[11.5px]'
+                    : displayNames.length > 20
+                    ? 'text-[9.5px] @xs:text-[12px] @sm:text-[13.5px]'
+                    : 'text-[11px] @xs:text-[14px] @sm:text-[16px]'
+                }`}>
+                  {displayNames}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={`text-[6px] @xs:text-[8px] font-mono font-bold px-2 py-0.5 rounded uppercase ${rolePillClass}`}>
+                  {displayRoles}
+                </span>
+              </div>
+              <p
+                style={{ color: isDark ? '#FEF08A' : '#78716C' }}
+                className="font-sans italic text-[6px] @xs:text-[8px] @sm:text-[9.5px] mt-1.5 truncate line-clamp-1 max-w-[150px] @xs:max-w-[220px]"
+              >
+                {taglineText}
+              </p>
+              <div className="flex flex-wrap items-center gap-1 mt-1.5 max-w-[150px] @xs:max-w-[240px] overflow-hidden">
+                {stackChips.map((chip, idx) => (
+                  <span
+                    key={idx}
+                    className={`font-mono text-[4.5px] @xs:text-[6px] @sm:text-[7.5px] font-semibold px-1 py-0.2 rounded border ${
+                      isDark
+                        ? 'bg-emerald-950/30 text-emerald-300 border-emerald-800/30'
+                        : 'bg-stone-100 text-stone-600 border-stone-200'
+                    }`}
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Right part: Passenger stamps (fixed sizing and overflow bounds) */}
+            <div className="shrink-0 flex items-center justify-end max-w-[42%] pl-1">
+              {!isTeam ? (
+                renderStampPhoto(details.photoUrl, details.photoTransform, '[ PHOTO ]', 'w-18 h-18 @xs:w-24 @xs:h-24 @sm:w-30 @sm:h-30')
+              ) : (
+                <div className="flex items-center -space-x-3 @xs:-space-x-4.5 @sm:-space-x-6">
+                  {renderStampPhoto(details.photoUrl, details.photoTransform, 'P1', 'w-10 h-10 @xs:w-13 @xs:h-13 @sm:w-17 @sm:h-17')}
+                  {details.teammates!.map((t, idx) => (
+                    <React.Fragment key={idx}>
+                      {renderStampPhoto(t.photoUrl, t.photoTransform, `P${idx + 2}`, 'w-10 h-10 @xs:w-13 @xs:h-13 @sm:w-17 @sm:h-17')}
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Details footer row */}
+          <div className={`grid grid-cols-4 gap-2 border-t pt-1.5 font-mono text-[6px] @xs:text-[8px] ${labelColor} ${headerBorder}`}>
+            <div>
+              <div className="uppercase">Flight</div>
+              <div className={`font-bold ${valueColor}`}>HH2026</div>
+            </div>
+            <div>
+              <div className="uppercase">Seat</div>
+              <div className={`font-bold ${valueColor}`}>24A</div>
+            </div>
+            <div>
+              <div className="uppercase">Gate</div>
+              <div className="font-bold text-[#F97316]">08</div>
+            </div>
+            <div>
+              <div className="uppercase">Date</div>
+              <div className={`font-bold ${valueColor}`}>28 OCT 2026</div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: Ticket Stub (28% width) */}
+        <div className={`w-[28%] border-l p-3 @xs:p-4 flex flex-col justify-between pl-6 ${stubBg} ${stubBorder}`}>
+          {/* Stub header */}
+          <div className={`border-b pb-1.5 text-right ${headerBorder}`}>
+            <span className={`font-mono text-[7px] @xs:text-[9px] font-bold uppercase tracking-wider ${labelColor}`}>
+              Flight Stub
+            </span>
+          </div>
+
+          {/* Stub details */}
+          <div className="flex-1 flex flex-col justify-center py-2 space-y-1 @xs:space-y-2 min-w-0">
+            <div className="space-y-0.5 min-w-0">
+              <div className={`text-[5px] @xs:text-[7px] font-mono uppercase ${labelColor}`}>Passenger</div>
+              <div className={`font-space font-black uppercase leading-none break-words line-clamp-2 ${
+                displayNames.length > 35
+                  ? 'text-[6.5px] @xs:text-[8px] @sm:text-[8.5px]'
+                  : displayNames.length > 20
+                  ? 'text-[7.5px] @xs:text-[9.5px] @sm:text-[10px]'
+                  : 'text-[9px] @xs:text-xs'
+              }`}>
+                {displayNames}
+              </div>
+            </div>
+            
+            <div className={`grid grid-cols-2 gap-1 font-mono text-[5px] @xs:text-[7px] ${labelColor}`}>
+              <div>
+                <div className="uppercase">Seat</div>
+                <div className={`font-bold ${valueColor}`}>24A</div>
+              </div>
+              <div>
+                <div className="uppercase">Class</div>
+                <div className={`font-bold ${valueColor}`}>VIP</div>
+              </div>
+            </div>
+
+
+          </div>
+
+          {/* Stub Footer */}
+          <div className={`border-t pt-1.5 text-right ${headerBorder}`}>
+            <span className={`font-mono text-[6px] @xs:text-[8px] font-bold ${isDark ? 'text-emerald-400/80' : 'text-stone-500'}`}>
+              {cardNumber}
+            </span>
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
+  if (theme.layout === 'square') {
+    return (
+      <div
+        className="@container w-full max-w-[560px] mx-auto aspect-square text-white rounded-[24px] @sm:rounded-[28px] border border-white/15 shadow-2xl relative overflow-hidden font-sans select-none"
+        style={{
+          backgroundImage: `url('/images/card-template-combined.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Central Polaroid Photo Frame */}
+        <div
+          className="absolute"
+          style={{
+            top: '25.7%',
+            left: '29.8%',
+            width: '40.4%',
+            height: '39.0%',
+            overflow: 'hidden',
+          }}
+        >
+          {!isTeam ? (
+            <div className="w-full h-full relative flex items-center justify-center bg-zinc-800">
+              {details.photoUrl ? (
+                <img
+                  src={details.photoUrl}
+                  alt={details.name}
+                  style={{
+                    transform: `scale(${details.photoTransform?.zoom || 1}) translate(${
+                      details.photoTransform?.panX || 0
+                    }px, ${details.photoTransform?.panY || 0}px) rotate(${
+                      details.photoTransform?.rotation || 0
+                    }deg)`,
+                    filter: getFilterStyle(details.photoTransform?.filter),
+                  }}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-[10px] @sm:text-xs font-mono text-white/80 font-bold">
+                  [ PHOTO ]
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="w-full h-full bg-[#021f14] flex items-center justify-center p-1.5">
+              <div className="flex items-center -space-x-3 @xs:-space-x-4 @sm:-space-x-5">
+                {/* Primary Photo */}
+                <div className="relative w-10 h-10 @xs:w-14 @xs:h-14 rounded-full bg-[#021f14] border border-[#075336] p-0.5 shadow-xl z-30">
+                  <div className="w-full h-full rounded-full overflow-hidden border border-[#facc15] bg-gradient-to-br from-yellow-400 to-emerald-600 relative flex items-center justify-center">
+                    {details.photoUrl ? (
+                      <img
+                        src={details.photoUrl}
+                        alt={details.name}
+                        style={{
+                          transform: `scale(${details.photoTransform?.zoom || 1}) translate(${
+                            details.photoTransform?.panX || 0
+                          }px, ${details.photoTransform?.panY || 0}px) rotate(${
+                            details.photoTransform?.rotation || 0
+                          }deg)`,
+                          filter: getFilterStyle(details.photoTransform?.filter),
+                        }}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="text-[5px] @xs:text-[7px] font-mono text-white/80 font-bold text-center">P1</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Teammates Photos */}
+                {details.teammates!.map((teammate, index) => (
+                  <div
+                    key={index}
+                    className="relative w-10 h-10 @xs:w-14 @xs:h-14 rounded-full bg-[#021f14] border border-[#075336] p-0.5 shadow-xl"
+                    style={{ zIndex: 20 - index }}
+                  >
+                    <div className="w-full h-full rounded-full overflow-hidden border border-[#facc15] bg-gradient-to-br from-yellow-400 to-emerald-600 relative flex items-center justify-center">
+                      {teammate.photoUrl ? (
+                        <img
+                          src={teammate.photoUrl}
+                          alt={teammate.name}
+                          style={{
+                            transform: `scale(${teammate.photoTransform?.zoom || 1}) translate(${
+                              teammate.photoTransform?.panX || 0
+                            }px, ${teammate.photoTransform?.panY || 0}px) rotate(${
+                              teammate.photoTransform?.rotation || 0
+                            }deg)`,
+                            filter: getFilterStyle(teammate.photoTransform?.filter),
+                          }}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-[5px] @xs:text-[7px] font-mono text-white/80 font-bold text-center">P{index + 2}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Green Badge User Name Overlay */}
+        <div
+          className="absolute flex items-center justify-center font-space font-extrabold text-white text-center uppercase tracking-wide"
+          style={{
+            top: '78.8%',
+            left: '22.0%',
+            width: '56.0%',
+            height: '7.0%',
+            fontSize: 'min(3.4cqw, 20px)',
+          }}
+        >
+          ✦ {displayNames} ✦
+        </div>
+
+        {/* Yellow Badge Role Overlay */}
+        <div
+          className="absolute flex items-center justify-center font-space font-extrabold text-center uppercase tracking-wide"
+          style={{
+            top: '87.4%',
+            left: '27.0%',
+            width: '46.0%',
+            height: '5.2%',
+            color: '#7F1D1D', // Deep reddish-brown font matching original
+            fontSize: 'min(2.8cqw, 16px)',
+          }}
+        >
+          ⚡ {displayRoles} ⚡
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

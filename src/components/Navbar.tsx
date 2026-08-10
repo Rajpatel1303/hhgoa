@@ -2,9 +2,11 @@ import React from 'react';
 
 interface NavbarProps {
   onReset: () => void;
+  bazookaModeActive: boolean;
+  onToggleBazooka: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onReset }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onReset, bazookaModeActive, onToggleBazooka }) => {
   return (
     <header className="w-full bg-[#0a0f0d] border-b border-emerald-900/60 sticky top-0 z-50 py-3.5 px-4 sm:px-8">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -29,6 +31,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onReset }) => {
             GOA, INDIA · OCT 28–31
           </span>
           <button
+            onClick={onToggleBazooka}
+            className={`transition-all duration-300 cursor-pointer text-xs font-mono px-3 py-1.5 rounded-lg border font-semibold ${
+              bazookaModeActive
+                ? 'bg-red-950/85 border-red-500/80 text-red-400 hover:bg-red-900/85 hover:text-red-200 shadow-[0_0_15px_rgba(239,68,68,0.25)] animate-pulse'
+                : 'border-emerald-900/80 text-emerald-400 hover:border-emerald-600 hover:text-yellow-300 hover:bg-emerald-950/40'
+            }`}
+          >
+            {bazookaModeActive ? 'Exit Weapon Mode 🛡️' : 'Destroy Form 💥'}
+          </button>
+          <button
             onClick={onReset}
             className="text-emerald-400 hover:text-yellow-300 transition-colors cursor-pointer text-xs font-mono"
           >
@@ -39,5 +51,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onReset }) => {
     </header>
   );
 };
+
 
 

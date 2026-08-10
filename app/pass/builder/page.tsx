@@ -25,7 +25,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const photo = params.photo || '';
   const title = params.title || '"Code on the Coast • Ship to the World"';
   const stack = params.stack || 'React, Node, AI';
-  const theme = params.theme || 'forest-emerald';
+  const theme = params.theme || 'vintage-goa';
 
   const host = process.env.NEXT_PUBLIC_SITE_URL || 'https://hhgoa-tau.vercel.app';
   
@@ -73,7 +73,7 @@ export default async function Page({ searchParams }: PageProps) {
   const photo = params.photo || '';
   const title = params.title || '"Neural Network Hacker & Prompt Sorcerer"';
   const stack = params.stack || 'Nextjs, Nodejs, Django, Flask, Gin, Rust, Tensorflow';
-  const theme = params.theme || 'forest-emerald';
+  const theme = params.theme || 'vintage-goa';
   const cardNo = params.cardNo || 'HH26-3E3BA58';
 
   const builderDetails: BuilderDetails = {

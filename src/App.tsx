@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Navbar } from './components/Navbar';
 import { CardPreview } from './components/CardPreview';
+import { BazookaWeapon } from './components/BazookaWeapon';
+import { LandingHero } from './components/LandingHero';
+import { playSound } from './lib/audio';
 import { BuilderDetails, BuilderRole, PhotoTransform, CARD_THEMES } from './types';
 import { generateTagline, generateCardNumber } from './lib/builderTitles';
 import { processUploadedFile } from './lib/imageProcessing';
@@ -78,6 +81,23 @@ export default function App() {
     message: string;
     clipboardSuccess?: boolean;
   } | null>(null);
+
+  const [bazookaModeActive, setBazookaModeActive] = useState(false);
+  const [destroyedElements, setDestroyedElements] = useState<Record<string, boolean>>({});
+
+  const handleDestroyElement = (elementId: string) => {
+    setDestroyedElements((prev) => ({ ...prev, [elementId]: true }));
+  };
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const generatorRef = useRef<HTMLDivElement | null>(null);
+
+  const handleBoardClick = () => {
+    containerRef.current?.scrollTo({
+      top: window.innerHeight,
+      behavior: 'smooth'
+    });
+  };
 
   useEffect(() => {
     setCardNumber(generateCardNumber());
@@ -178,24 +198,56 @@ export default function App() {
     setCardNumber(generateCardNumber());
     setPassType('single');
     setTeammates([initialTeammateState()]);
+    setDestroyedElements({});
+    setBazookaModeActive(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#070d0a] text-[#f2efe9] font-sans antialiased flex flex-col justify-between selection:bg-[#facc15] selection:text-black">
-      {/* Navbar */}
-      <Navbar onReset={handleReset} />
+    <div 
+      ref={containerRef}
+      className={`snap-container selection:bg-[#facc15] selection:text-black ${bazookaModeActive ? 'bazooka-mode-active' : ''}`}
+    >
+      {/* Slide 1: Landing Branding & Takeoff */}
+      <div className="snap-section">
+        <LandingHero 
+          onBoardClick={handleBoardClick} 
+        />
+      </div>
+
+      {/* Slide 2: Passport Card Generator Studio */}
+      <div 
+        ref={generatorRef}
+        className="snap-section min-h-screen bg-[#070d0a] text-[#f2efe9] font-sans antialiased flex flex-col justify-between"
+      >
+        {/* Navbar */}
+        <Navbar
+          onReset={handleReset}
+          bazookaModeActive={bazookaModeActive}
+          onToggleBazooka={() => setBazookaModeActive(!bazookaModeActive)}
+        />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 py-8 space-y-8">
 
             {/* Simple Human Title Intro */}
-            <div className="space-y-2 border-b border-emerald-900/60 pb-6">
-              <h1 className="font-space font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
-                Builder Passport Generator
-              </h1>
-              <p className="font-sans text-sm text-emerald-300/80 max-w-2xl leading-relaxed">
-                Create your official Hacker House Goa 2026 builder card. Customize your photo, role, tech stack, and details to share with the community.
-              </p>
+            <div 
+              data-destroy-id="intro-section"
+              className={`relative targetable-element ${destroyedElements['intro-section'] ? 'element-destroyed' : ''}`}
+            >
+              <div className="space-y-2 border-b border-emerald-900/60 pb-6">
+                <h1 className="font-space font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+                  Builder Passport Generator
+                </h1>
+                <p className="font-sans text-sm text-emerald-300/80 max-w-2xl leading-relaxed">
+                  Create your official Hacker House Goa 2026 builder card. Customize your photo, role, tech stack, and details to share with the community.
+                </p>
+              </div>
             </div>
+            {destroyedElements['intro-section'] && (
+              <div className="charred-ruin min-h-[90px] mb-6">
+                <span className="text-xl mb-1">💥</span>
+                <div className="font-bold font-mono text-[10px]">Passport Studio Intro Vaporized</div>
+              </div>
+            )}
 
         {/* 2-Column Human Studio Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -204,36 +256,50 @@ export default function App() {
           <div className="lg:col-span-6 space-y-6">
             
             {/* Format Selector */}
-            <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-4 flex items-center justify-between gap-4">
-              <span className="font-space font-bold text-sm text-white">Pass Type</span>
-              <div className="flex bg-[#080d0b] border border-emerald-950 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setPassType('single')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-space font-extrabold transition-all cursor-pointer ${
-                    passType === 'single'
-                      ? 'bg-[#facc15] text-black shadow-md'
-                      : 'text-emerald-300/80 hover:text-white'
-                  }`}
-                >
-                  Single Pass
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPassType('team')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-space font-extrabold transition-all cursor-pointer ${
-                    passType === 'team'
-                      ? 'bg-[#facc15] text-black shadow-md'
-                      : 'text-emerald-300/80 hover:text-white'
-                  }`}
-                >
-                  Team Pass
-                </button>
+            <div 
+              data-destroy-id="pass-type-section"
+              className={`relative targetable-element ${destroyedElements['pass-type-section'] ? 'element-destroyed' : ''}`}
+            >
+              <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-4 flex items-center justify-between gap-4">
+                <span className="font-space font-bold text-sm text-white">Pass Type</span>
+                <div className="flex bg-[#080d0b] border border-emerald-950 p-1 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setPassType('single')}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-space font-extrabold transition-all cursor-pointer ${
+                      passType === 'single'
+                        ? 'bg-[#facc15] text-black shadow-md'
+                        : 'text-emerald-300/80 hover:text-white'
+                    }`}
+                  >
+                    Single Pass
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPassType('team')}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-space font-extrabold transition-all cursor-pointer ${
+                      passType === 'team'
+                        ? 'bg-[#facc15] text-black shadow-md'
+                        : 'text-emerald-300/80 hover:text-white'
+                    }`}
+                  >
+                    Team Pass
+                  </button>
+                </div>
               </div>
             </div>
+            {destroyedElements['pass-type-section'] && (
+              <div className="charred-ruin min-h-[60px]">
+                <span className="text-xl">💥 PASS SELECTOR VAPORIZED</span>
+              </div>
+            )}
 
             {/* 1. Photo Section */}
-            <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-4">
+            <div 
+              data-destroy-id="photo-section"
+              className={`relative targetable-element ${destroyedElements['photo-section'] ? 'element-destroyed' : ''}`}
+            >
+              <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <label className="font-space font-bold text-sm text-white flex items-center gap-2">
                   <User className="w-4 h-4 text-[#facc15]" />
@@ -332,11 +398,24 @@ export default function App() {
                   )}
                 </div>
               )}
+              </div>
             </div>
+            {destroyedElements['photo-section'] && (
+              <div className="charred-ruin min-h-[160px] mb-6">
+                <span className="text-3xl mb-1">💥</span>
+                <div className="font-bold">Photo Module Vaporized</div>
+                <div className="text-[10px] text-zinc-500 font-mono mt-1">Status: Smoldering Ruins</div>
+              </div>
+            )}
 
             {/* Dynamic Teammates Section */}
             {passType === 'team' && (
-              <div className="space-y-6">
+              <>
+                <div 
+                  data-destroy-id="teammate-section"
+                  className={`relative targetable-element ${destroyedElements['teammate-section'] ? 'element-destroyed' : ''}`}
+                >
+                  <div className="space-y-6">
                 {teammates.map((teammate, index) => (
                   <div key={index} className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-4 relative">
                     <div className="flex items-center justify-between border-b border-emerald-900/60 pb-3">
@@ -504,11 +583,23 @@ export default function App() {
                     <span>Add Teammate Details ({teammates.length}/2)</span>
                   </button>
                 )}
-              </div>
+                  </div>
+                </div>
+                {destroyedElements['teammate-section'] && (
+                  <div className="charred-ruin min-h-[140px] mb-6">
+                    <span className="text-3xl mb-2">💥</span>
+                    <div className="font-bold">Teammate Module Vaporized</div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* 2. Details Section */}
-            <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-4">
+            <div 
+              data-destroy-id="details-section"
+              className={`relative targetable-element ${destroyedElements['details-section'] ? 'element-destroyed' : ''}`}
+            >
+              <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-4">
               <div className="font-space font-bold text-sm text-white flex items-center gap-2 mb-2">
                 <Code className="w-4 h-4 text-[#facc15]" />
                 <span>Builder Details</span>
@@ -574,10 +665,22 @@ export default function App() {
                   {builderTitle}
                 </div>
               </div>
+              </div>
             </div>
+            {destroyedElements['details-section'] && (
+              <div className="charred-ruin min-h-[220px] mb-6">
+                <span className="text-3xl mb-1">💥</span>
+                <div className="font-bold">Builder Details Module Vaporized</div>
+                <div className="text-[10px] text-zinc-500 font-mono mt-1">Status: Scrap Metal & Ash</div>
+              </div>
+            )}
 
             {/* 3. Theme Palette Selector */}
-            <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-3">
+            <div 
+              data-destroy-id="theme-section"
+              className={`relative targetable-element ${destroyedElements['theme-section'] ? 'element-destroyed' : ''}`}
+            >
+              <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-3">
               <label className="font-space font-bold text-sm text-white flex items-center gap-2">
                 <Palette className="w-4 h-4 text-[#facc15]" />
                 <span>Card Theme Color</span>
@@ -616,13 +719,24 @@ export default function App() {
                   );
                 })}
               </div>
+              </div>
             </div>
+            {destroyedElements['theme-section'] && (
+              <div className="charred-ruin min-h-[110px] mb-6">
+                <span className="text-2xl mb-1">💥</span>
+                <div className="font-bold">Theme Selector Vaporized</div>
+              </div>
+            )}
 
           </div>
 
           {/* Right Column: Live Card Preview & Actions */}
           <div className="lg:col-span-6 space-y-5 lg:sticky lg:top-20">
-            <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-5">
+            <div 
+              data-destroy-id="preview-section"
+              className={`relative targetable-element ${destroyedElements['preview-section'] ? 'element-destroyed' : ''}`}
+            >
+              <div className="bg-[#0e1512] border border-emerald-900/60 rounded-2xl p-6 space-y-5">
               <div className="text-center space-y-1">
                 <h2 className="font-space font-bold text-lg text-white">
                   Live Builder Card
@@ -657,7 +771,15 @@ export default function App() {
                   <span>{isSharing ? 'Preparing Share...' : 'Share on X (#FrameInGoa)'}</span>
                 </button>
               </div>
+              </div>
             </div>
+            {destroyedElements['preview-section'] && (
+              <div className="charred-ruin min-h-[350px]">
+                <span className="text-5xl mb-4">💥</span>
+                <div className="font-bold text-lg font-space">Live Preview Vaporized</div>
+                <div className="text-xs text-zinc-500 font-mono mt-2">Cannot export or share ashes.</div>
+              </div>
+            )}
           </div>
 
         </div>
@@ -721,6 +843,28 @@ export default function App() {
           HACKER HOUSE GOA 2026 • OFFICIAL BUILDER PASSPORT STUDIO
         </div>
       </footer>
+
+      {/* Bazooka Weapon Mode Overlay */}
+      <BazookaWeapon 
+        active={bazookaModeActive} 
+        onDestroyElement={handleDestroyElement} 
+      />
+
+      </div>
+
+      {/* Floating Rebuild Button */}
+      {Object.keys(destroyedElements).length > 0 && (
+        <button
+          type="button"
+          onClick={() => {
+            setDestroyedElements({});
+            playSound('rebuild');
+          }}
+          className="rebuild-btn fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] bg-emerald-500 hover:bg-emerald-400 text-black font-space font-extrabold text-xs uppercase px-6 py-3.5 rounded-xl border border-emerald-300 shadow-[0_0_25px_rgba(16,185,129,0.5)] flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+        >
+          <span>Rebuild Website 🛠️</span>
+        </button>
+      )}
     </div>
   );
 }
