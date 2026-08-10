@@ -42,12 +42,12 @@ export default function App() {
     filter: 'none',
   });
 
-  const [name, setName] = useState<string>('Harsh Raikwar');
-  const [stack, setStack] = useState<string>('Nextjs, Nodejs, Django, Flask, Gin, Rust, Tensorflow');
-  const [role, setRole] = useState<BuilderRole>('AI / ML');
+  const [name, setName] = useState<string>('');
+  const [stack, setStack] = useState<string>('');
+  const [role, setRole] = useState<BuilderRole>('Developer');
   const [themeId, setThemeId] = useState<string>(CARD_THEMES[0].id);
   const [titleVariant, setTitleVariant] = useState<number>(0);
-  const [cardNumber, setCardNumber] = useState<string>('HH26-4E90D7AC');
+  const [cardNumber, setCardNumber] = useState<string>(generateCardNumber());
   const [passType, setPassType] = useState<'single' | 'team'>('single');
 
   // Teammates state (supports up to 2 teammates, making a team of 3)
@@ -635,7 +635,7 @@ export default function App() {
                   type="text"
                   value={stack}
                   onChange={(e) => setStack(e.target.value)}
-                  placeholder="e.g. Nextjs, Nodejs, Django, Flask, Gin, Rust"
+                  placeholder="e.g. React, Node.js, Python, TensorFlow..."
                   className="w-full bg-[#080d0b] border border-emerald-900 focus:border-[#facc15] text-white font-mono text-xs px-3.5 py-2.5 rounded-xl outline-none transition-colors"
                 />
                 <p className="font-sans text-[11px] text-emerald-400/60">
