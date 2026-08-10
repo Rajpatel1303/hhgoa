@@ -14,14 +14,7 @@ async function getBase64Image(url: string): Promise<string> {
     if (!res.ok) return '';
     const arrayBuffer = await res.arrayBuffer();
     
-    // Convert ArrayBuffer to Base64 in Edge Runtime
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
-    
+    const base64 = Buffer.from(arrayBuffer).toString('base64');
     const contentType = res.headers.get('content-type') || 'image/png';
     return `data:${contentType};base64,${base64}`;
   } catch (e) {
