@@ -14,6 +14,12 @@ export async function POST(request: Request) {
 
     // Local development fallback if Vercel token is not configured
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+        return NextResponse.json({
+          error: 'Vercel Blob Storage is not connected. Please connect Blob in Vercel Dashboard -> Storage.'
+        }, { status: 500 });
+      }
+
       console.warn('BLOB_READ_WRITE_TOKEN is missing. Falling back to local public directory storage.');
       
       const bytes = await file.arrayBuffer();
