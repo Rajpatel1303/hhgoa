@@ -35,7 +35,7 @@ export function getTwitterShareUrl(details: BuilderDetails, customPhotoUrl?: str
     ? [name, ...details.teammates!.map((t) => t.name || 'Teammate')].join(' & ')
     : name;
 
-  const shareText = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${cardNo}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
+  const shareText = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${cardNo}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
 
   const params = new URLSearchParams({
     text: shareText
@@ -226,7 +226,7 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
       ? [detailsForShare.name || 'Builder', ...detailsForShare.teammates!.map((t) => t.name || 'Teammate')].join(' & ')
       : detailsForShare.name || 'Builder';
 
-    const shareTextMobile = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${detailsForShare.cardNumber || ''}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
+    const shareTextMobile = `Built my Hacker House Goa Builder Card!\n\n👤 ${displayNames}\n🪪 Builder ID: #${detailsForShare.cardNumber || ''}\n\nExcited to build, ship, and connect with amazing builders in Goa. 🚀\n\nCreate your own Builder Card:\n\n${shareUrl}\n\n#FrameInGoa #HHGoa2026`;
 
     // Step 2: Check Web Share Support on mobile browsers
     if (
