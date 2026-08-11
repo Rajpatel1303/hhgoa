@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
                 <div style={{ display: 'flex', alignItems: 'center', color: headerColor, fontSize: '18px', fontWeight: 900 }}>
                   ✈️ HACKER HOUSE AIRLINES
                 </div>
-                <div style={{ color: labelColor, fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                <div style={{ color: labelColor, fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace', display: 'flex' }}>
                   BOARDING PASS
                 </div>
               </div>
@@ -294,7 +294,7 @@ export async function GET(req: NextRequest) {
                           }}
                         />
                       ) : (
-                        <div style={{ color: '#A8A29E', fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>
+                        <div style={{ color: '#A8A29E', fontSize: '16px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto', display: 'flex' }}>
                           [ PHOTO ]
                         </div>
                       )}
@@ -323,7 +323,7 @@ export async function GET(req: NextRequest) {
                         {mainPhotoBase64 ? (
                           <img src={mainPhotoBase64} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         ) : (
-                          <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P1</div>
+                          <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto', display: 'flex' }}>P1</div>
                         )}
                       </div>
                     </div>
@@ -350,7 +350,7 @@ export async function GET(req: NextRequest) {
                           {teammatesWithBase64[0].photoUrl ? (
                             <img src={teammatesWithBase64[0].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P2</div>
+                            <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto', display: 'flex' }}>P2</div>
                           )}
                         </div>
                       </div>
@@ -378,7 +378,7 @@ export async function GET(req: NextRequest) {
                           {teammatesWithBase64[1].photoUrl ? (
                             <img src={teammatesWithBase64[1].photoUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto' }}>P3</div>
+                            <div style={{ color: '#A8A29E', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', margin: 'auto', display: 'flex' }}>P3</div>
                           )}
                         </div>
                       </div>
@@ -399,10 +399,10 @@ export async function GET(req: NextRequest) {
                   color: labelColor,
                 }}
               >
-                <div>FLIGHT: <span style={{ color: valueColor, fontWeight: 'bold' }}>HH2026</span></div>
-                <div>SEAT: <span style={{ color: valueColor, fontWeight: 'bold' }}>24A</span></div>
-                <div>GATE: <span style={{ color: '#F97316', fontWeight: 'bold' }}>08</span></div>
-                <div>DATE: <span style={{ color: valueColor, fontWeight: 'bold' }}>28 OCT 2026</span></div>
+                <div style={{ display: 'flex' }}><span>FLIGHT:</span><span style={{ color: valueColor, fontWeight: 'bold', marginLeft: '4px' }}>HH2026</span></div>
+                <div style={{ display: 'flex' }}><span>SEAT:</span><span style={{ color: valueColor, fontWeight: 'bold', marginLeft: '4px' }}>24A</span></div>
+                <div style={{ display: 'flex' }}><span>GATE:</span><span style={{ color: '#F97316', fontWeight: 'bold', marginLeft: '4px' }}>08</span></div>
+                <div style={{ display: 'flex' }}><span>DATE:</span><span style={{ color: valueColor, fontWeight: 'bold', marginLeft: '4px' }}>28 OCT 2026</span></div>
               </div>
 
             </div>
@@ -422,7 +422,7 @@ export async function GET(req: NextRequest) {
               }}
             >
               {/* Header */}
-              <div style={{ borderBottom: dividerBorder, paddingBottom: '10px', textAlign: 'right' }}>
+              <div style={{ borderBottom: dividerBorder, paddingBottom: '10px', display: 'flex', justifyContent: 'flex-end' }}>
                 <span style={{ color: labelColor, fontSize: '14px', fontWeight: 'bold', fontFamily: 'monospace' }}>
                   FLIGHT STUB
                 </span>
@@ -463,7 +463,7 @@ export async function GET(req: NextRequest) {
               </div>
 
               {/* Stub card number footer */}
-              <div style={{ borderTop: dividerBorder, paddingTop: '10px', textAlign: 'right' }}>
+              <div style={{ borderTop: dividerBorder, paddingTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
                 <span style={{ color: cardNumberColor, fontSize: '12px', fontFamily: 'monospace', fontWeight: 'bold' }}>
                   {searchParams.get('cardNo') || 'HH26-BUILDER'}
                 </span>
