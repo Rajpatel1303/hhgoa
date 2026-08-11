@@ -44,26 +44,27 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Preload main photo and convert to base64 Data URL to bypass Satori network fetches
-    let mainPhotoBase64 = '';
+    // Preload main photo and teammate photos in parallel to optimize rendering speed and avoid Edge execution limits
+    let mainPhotoPromise = Promise.resolve('');
     if (photo) {
-      mainPhotoBase64 = await getBase64Image(photo);
+      mainPhotoPromise = getBase64Image(photo);
     }
 
-    // Preload teammate photos and convert to base64 Data URLs
-    const teammatesWithBase64 = [];
-    if (teammates && teammates.length > 0) {
-      for (const t of teammates) {
-        let teammateBase64 = '';
-        if (t.photoUrl) {
-          teammateBase64 = await getBase64Image(t.photoUrl);
-        }
-        teammatesWithBase64.push({
-          ...t,
-          photoUrl: teammateBase64 || null
-        });
+    const teammatePromises = (teammates || []).map(async (t: any) => {
+      let teammateBase64 = '';
+      if (t.photoUrl) {
+        teammateBase64 = await getBase64Image(t.photoUrl);
       }
-    }
+      return {
+        ...t,
+        photoUrl: teammateBase64 || null
+      };
+    });
+
+    const [mainPhotoBase64, ...teammatesWithBase64] = await Promise.all([
+      mainPhotoPromise,
+      ...teammatePromises
+    ]);
 
     const isTeam = passType === 'team' && teammates.length > 0;
     
@@ -208,7 +209,23 @@ export async function GET(req: NextRequest) {
                 {/* Details */}
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', color: airportCodeColor, fontSize: '48px', fontWeight: 900 }}>
-                    HCK <span style={{ color: arrowColor, fontSize: '28px', margin: '0 15px' }}>➔</span> GOA
+                    HCK 
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style={{ margin: '0 15px', display: 'flex' }}
+                    >
+                      <path
+                        d="M5 12h14M12 5l7 7-7 7"
+                        stroke={arrowColor}
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    GOA
                   </div>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>

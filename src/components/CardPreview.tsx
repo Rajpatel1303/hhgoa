@@ -116,7 +116,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({ details }) => {
             <div className="flex-1 space-y-1 @xs:space-y-2 min-w-0 pr-2">
               <div className="flex items-center gap-2 @xs:gap-3 leading-none">
                 <span className={`font-space font-black text-2xl @xs:text-4xl ${isDark ? 'text-white' : 'text-[#047857]'}`}>HCK</span>
-                <span className="text-[#F97316] font-bold text-xs @xs:text-sm">➔</span>
+                <span className="text-[#F97316] font-bold text-xs @xs:text-sm">→</span>
                 <span className={`font-space font-black text-2xl @xs:text-4xl ${isDark ? 'text-white' : 'text-[#047857]'}`}>GOA</span>
               </div>
               
