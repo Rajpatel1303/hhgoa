@@ -114,20 +114,15 @@
   transform: translate(-50%, -50%);
 }
 
-/* Scroll snapping styles */
+/* Scroll styles */
 .snap-container {
-  scroll-snap-type: y mandatory;
-  overflow-y: auto;
-  height: 100vh;
   scroll-behavior: smooth;
+  width: 100%;
 }
 
 .snap-section {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  height: 100vh;
-  overflow-y: auto;
   position: relative;
+  width: 100%;
 }
 
 /* Condensed heavy title font for Landing Screen */

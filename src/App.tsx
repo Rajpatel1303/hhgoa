@@ -5,6 +5,7 @@ import { Navbar } from './components/Navbar';
 import { CardPreview } from './components/CardPreview';
 import { BazookaWeapon } from './components/BazookaWeapon';
 import { LandingHero } from './components/LandingHero';
+import { DoorOverlay } from './components/DoorOverlay';
 import { playSound } from './lib/audio';
 import { BuilderDetails, BuilderRole, PhotoTransform, CARD_THEMES } from './types';
 import { generateTagline, generateCardNumber } from './lib/builderTitles';
@@ -93,9 +94,14 @@ export default function App() {
   const generatorRef = useRef<HTMLDivElement | null>(null);
 
   const handleBoardClick = () => {
-    containerRef.current?.scrollTo({
-      top: window.innerHeight,
-      behavior: 'smooth'
+    import('gsap').then(({ default: gsap }) => {
+      const obj = { y: window.scrollY };
+      gsap.to(obj, {
+        y: window.innerHeight,
+        duration: 1.2,
+        ease: 'power2.inOut',
+        onUpdate: () => window.scrollTo(0, obj.y)
+      });
     });
   };
 
@@ -207,12 +213,8 @@ export default function App() {
       ref={containerRef}
       className={`snap-container selection:bg-[#facc15] selection:text-black ${bazookaModeActive ? 'bazooka-mode-active' : ''}`}
     >
-      {/* Slide 1: Landing Branding & Takeoff */}
-      <div className="snap-section">
-        <LandingHero 
-          onBoardClick={handleBoardClick} 
-        />
-      </div>
+      {/* Slide 1: Landing Branding Spacer */}
+      <div className="snap-section w-full h-screen bg-[#005030]" />
 
       {/* Slide 2: Passport Card Generator Studio */}
       <div 
@@ -865,6 +867,9 @@ export default function App() {
           <span>Rebuild Website 🛠️</span>
         </button>
       )}
+      
+      {/* Cinematic Door Overlay */}
+      <DoorOverlay onBoardClick={handleBoardClick} />
     </div>
   );
 }
