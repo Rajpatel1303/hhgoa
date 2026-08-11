@@ -10,7 +10,7 @@ import { playSound } from './lib/audio';
 import { BuilderDetails, BuilderRole, PhotoTransform, CARD_THEMES } from './types';
 import { generateTagline, generateCardNumber } from './lib/builderTitles';
 import { processUploadedFile } from './lib/imageProcessing';
-import { exportCardAsPng, shareOnX, handleFullShareFlow } from './lib/share';
+import { exportCardAsPng, handleFullShareFlow } from './lib/share';
 import { 
   Upload, RefreshCw, User, Code, Briefcase, 
   Palette, Download, Share2, Check, AlertCircle, Sliders, Sparkles,
@@ -188,7 +188,12 @@ export default function App() {
       }
     } catch (err) {
       console.error('Share error:', err);
-      shareOnX(detailsToShare);
+      setShareNotice({
+        title: 'Could not prepare your X post',
+        message: err instanceof Error
+          ? err.message
+          : 'The photo could not be uploaded publicly. Please try again.',
+      });
     } finally {
       setIsSharing(false);
     }

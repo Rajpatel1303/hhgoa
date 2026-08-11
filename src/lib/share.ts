@@ -66,6 +66,76 @@ function dataURItoBlob(dataURI: string): Blob {
   return new Blob([ab], { type: mimeString });
 }
 
+async function uploadPhoto(photoUrl: string, fileName: string): Promise<string> {
+  let photoBlob: Blob;
+
+  if (photoUrl.startsWith('data:')) {
+    photoBlob = dataURItoBlob(photoUrl);
+  } else if (photoUrl.startsWith('blob:')) {
+    const photoResponse = await fetch(photoUrl);
+    if (!photoResponse.ok) {
+      throw new Error('The selected photo could not be read from this browser.');
+    }
+    photoBlob = await photoResponse.blob();
+  } else {
+    return photoUrl;
+  }
+
+  if (!photoBlob.type.startsWith('image/')) {
+    throw new Error('The selected file is not a supported image.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', photoBlob, fileName);
+
+  const uploadResponse = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  let payload: { url?: string; error?: string } = {};
+  try {
+    payload = await uploadResponse.json();
+  } catch {
+    throw new Error('Photo storage returned an invalid response.');
+  }
+
+  if (!uploadResponse.ok) {
+    throw new Error(payload.error || `Photo upload failed (${uploadResponse.status}).`);
+  }
+
+  if (!payload.url) {
+    throw new Error('Photo storage did not return a public URL.');
+  }
+
+  let publicUrl: URL;
+  try {
+    publicUrl = new URL(payload.url);
+  } catch {
+    throw new Error('Photo storage returned an invalid public URL.');
+  }
+
+  if (publicUrl.protocol !== 'https:') {
+    throw new Error('The uploaded photo is not available over HTTPS.');
+  }
+
+  // Verify the same public URL that the X/OG crawler will need to fetch. A new
+  // Blob can take a moment to propagate to every region, so retry briefly.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const publicResponse = await fetch(publicUrl.toString(), { cache: 'no-store' });
+    const contentType = publicResponse.headers.get('content-type') || '';
+    if (publicResponse.ok && contentType.startsWith('image/')) {
+      return publicUrl.toString();
+    }
+
+    if (attempt < 2) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+    }
+  }
+
+  throw new Error('The uploaded photo is not publicly readable yet. Please try sharing again.');
+}
+
 /**
  * Handles complete client-side share flow:
  * 1. Uploads local blob or base64 photo to CDN storage if needed to obtain public HTTP URL
@@ -125,64 +195,17 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
 
   try {
     // Step 1: Upload photo to CDN if it is local blob or base64 data URL
-    let publicPhotoUrl = '';
-    if (details.photoUrl && (details.photoUrl.startsWith('blob:') || details.photoUrl.startsWith('data:'))) {
-      try {
-        let photoBlob: Blob;
-        if (details.photoUrl.startsWith('data:')) {
-          photoBlob = dataURItoBlob(details.photoUrl);
-        } else {
-          const photoResponse = await fetch(details.photoUrl);
-          photoBlob = await photoResponse.blob();
-        }
-        
-        const formData = new FormData();
-        formData.append('file', photoBlob, 'avatar.png');
-        
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        const uploadResData = await uploadRes.json();
-        if (uploadResData.url) {
-          publicPhotoUrl = uploadResData.url;
-        }
-      } catch (err) {
-        console.error('Failed to upload avatar to CDN:', err);
-      }
-    } else if (details.photoUrl) {
-      publicPhotoUrl = details.photoUrl; // already public
-    }
+    const publicPhotoUrl = details.photoUrl
+      ? await uploadPhoto(details.photoUrl, 'builder-avatar.jpg')
+      : '';
 
     // Upload teammate photos to CDN if they are local blob or base64 data URLs
     const uploadedTeammates = [];
     if (details.teammates && details.teammates.length > 0) {
       for (const teammate of details.teammates) {
         let teammatePhotoUrl = teammate.photoUrl || '';
-        if (teammatePhotoUrl && (teammatePhotoUrl.startsWith('blob:') || teammatePhotoUrl.startsWith('data:'))) {
-          try {
-            let photoBlob: Blob;
-            if (teammatePhotoUrl.startsWith('data:')) {
-              photoBlob = dataURItoBlob(teammatePhotoUrl);
-            } else {
-              const photoResponse = await fetch(teammatePhotoUrl);
-              photoBlob = await photoResponse.blob();
-            }
-            
-            const formData = new FormData();
-            formData.append('file', photoBlob, 'avatar.png');
-            
-            const uploadRes = await fetch('/api/upload', {
-              method: 'POST',
-              body: formData,
-            });
-            const uploadResData = await uploadRes.json();
-            if (uploadResData.url) {
-              teammatePhotoUrl = uploadResData.url;
-            }
-          } catch (err) {
-            console.error('Failed to upload teammate avatar to CDN:', err);
-          }
+        if (teammatePhotoUrl) {
+          teammatePhotoUrl = await uploadPhoto(teammatePhotoUrl, 'teammate-avatar.jpg');
         }
         uploadedTeammates.push({
           ...teammate,
@@ -259,9 +282,7 @@ export async function handleFullShareFlow(details: BuilderDetails): Promise<{
         newTab.close();
       } catch (e) {}
     }
-    // Fallback simple window open on error
-    shareOnX(details);
-    return { nativeShared: false, twitterOpened: true };
+    throw err instanceof Error ? err : new Error('Could not prepare the card for sharing.');
   }
 }
 

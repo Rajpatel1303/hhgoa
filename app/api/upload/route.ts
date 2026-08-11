@@ -12,6 +12,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Only image uploads are supported' }, { status: 415 });
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Image must be smaller than 8 MB' }, { status: 413 });
+    }
+
     // Local development fallback if Vercel token is not configured
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       if (process.env.VERCEL || process.env.NODE_ENV === 'production') {

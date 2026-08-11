@@ -9,18 +9,29 @@ export const runtime = 'edge';
  */
 async function getBase64Image(url: string): Promise<string> {
   if (!url) return '';
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return '';
-    const arrayBuffer = await res.arrayBuffer();
-    
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    const contentType = res.headers.get('content-type') || 'image/png';
-    return `data:${contentType};base64,${base64}`;
-  } catch (e) {
-    console.error('Failed to fetch image for base64 conversion:', e);
-    return '';
+  let lastError: unknown;
+
+  // A newly-created Blob can take a brief moment to become readable from the
+  // OG edge region. Retrying prevents X from caching a blank first render.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      const contentType = res.headers.get('content-type') || '';
+      if (!res.ok) throw new Error(`Photo request returned ${res.status}`);
+      if (!contentType.startsWith('image/')) throw new Error(`Unexpected photo type: ${contentType || 'unknown'}`);
+
+      const arrayBuffer = await res.arrayBuffer();
+      if (arrayBuffer.byteLength === 0) throw new Error('Photo response was empty');
+
+      const base64 = Buffer.from(arrayBuffer).toString('base64');
+      return `data:${contentType};base64,${base64}`;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 200 * (attempt + 1)));
+    }
   }
+
+  throw lastError instanceof Error ? lastError : new Error('Failed to fetch the shared photo');
 }
 
 export async function GET(req: NextRequest) {
